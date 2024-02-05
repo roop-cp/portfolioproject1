@@ -264,7 +264,7 @@ from PortfolioProject.dbo.Covid_Vaccination
 exec  VaccinationTable
 
 
---details of new covid measures in the year 2022-23 using subquery in different method
+--details of new covid measures in the year 2020-23 using subquery in different method
 
 --2020-2021 covid measures
 -- using WITH clause(CTE)
@@ -341,8 +341,6 @@ inner join year22_23 y
 where d.continent is not null 
 order by date
 
-
-
 -- using subquery
 
 select d.continent,DATEPART(year,d.date) as year,d.location,d.population
@@ -361,25 +359,7 @@ where d.continent is not null
 group by DATEPART(year,d.date), d.continent,d.location,d.population
 order by d.continent,year	
 
---confirming the results
---date wise details
-
---select d.continent,d.date,d.location,d.population,d.new_cases,d.new_deaths,v.new_tests,v.new_vaccinations
---from PortfolioProject.dbo.Covid_Deaths AS d
---inner join
---(select location,date,new_tests,new_vaccinations
---				     from PortfolioProject.dbo.Covid_Vaccination
---					 where DATEPART(year,date) between 2022 and 2023
---					 group by location,date,new_tests,new_vaccinations) AS v
---	on d.location = v.location
---	and d.date = v.date
---where d.continent is not null 
---order by date
 	
-	
-
-
-
 --Rolling vaccination
 
 select d.continent,d.location,d.date,d.population,v.new_vaccinations
@@ -404,7 +384,7 @@ as
 select d.continent,d.location,datepart(year,d.date),d.population
 	 --,v.people_vaccinated,v.new_vaccinations, v.total_vaccinations
 	 ,sum(convert(float,v.new_vaccinations))
-	 over (partition by d.location order by datepart(year,d.date) ) as RollingVaccination1
+	 over (partition by d.location order by datepart(year,d.date) ) as RollingVaccination
 	 ,max(convert(float, v.people_vaccinated))
 	  over (partition by d.location order by datepart(year,d.date) ) as HighestCountOfPeopleVaccinated
 from PortfolioProject.dbo.Covid_Deaths AS d
@@ -421,31 +401,6 @@ select *
 		, round((HighestCountOfPeopleVaccinated/population) *100,2) as PercentHighestCountOfPeopleVaccinated
 from VacPopulation
 order by location, year desc
-
-
-
-
-
-with VacPopulation(continent,location,year,population,people_vaccinated,HighestCountOfPeopleVaccinated) 
-as
-(
-select d.continent,d.location,datepart(year,d.date),d.population,v.people_vaccinated
-	 ,max(convert(float, v.people_vaccinated))
-	  over (partition by d.location order by datepart(year,d.date) ) as HighestCountOfPeopleVaccinated
-from PortfolioProject.dbo.Covid_Deaths AS d
-join
-PortfolioProject.dbo.Covid_Vaccination AS v
-	on d.location = v.location
-	 and d.date = v.date
-where d.continent is not null 
-group by d.continent,d.location,d.date,d.population,v.people_vaccinated
---order by d.location,d.date
-)
-
-select * , round((HighestCountOfPeopleVaccinated/population) *100,2) as PercentageOfvaccByPopulation
-from VacPopulation
-order by location, year desc
-
 
 
 --temporary table
